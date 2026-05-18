@@ -1,6 +1,7 @@
 #Command to run : uvicorn ingestion_parsing.main:app --reload
 
 from fastapi import FastAPI, UploadFile, File
+#import the two parsing modules for CSV metadata and SQL schemas
 from ingestion_parsing.csv_parser import parse_csv
 from ingestion_parsing.ddl_parser import parse_ddl  
 
@@ -9,21 +10,25 @@ app = FastAPI()
 # define a maximum file size limit to prevent backend crash from large uploads
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
+#Simple endpoint to confirm backend server is running.
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
-    filename = file.filename.lower()
-    content = await file.read()
 
+async def upload_file(file: UploadFile = File(...)):
+    filename = file.filename.lower() # Normalize filename for safer extension checks
+    content = await file.read() # Read uploaded file content
+
+#check if filename is empty or just whitespace
     if not filename or filename.strip() == "":
         return {"error": "No filename detected"}
 
     if len(content) > MAX_FILE_SIZE:
         return {"error": "File too large. Maximum allowed size is 10MB."}
-
+    
+# Route to the appropriate parser based on file extension
     if filename.endswith(".csv"):
         return parse_csv(content)
     elif filename.endswith(".sql") or filename.endswith(".ddl"):
