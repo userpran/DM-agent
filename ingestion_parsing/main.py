@@ -1,3 +1,5 @@
+#Command to run : uvicorn ingestion_parsing.main:app --reload
+
 from fastapi import FastAPI, UploadFile, File
 from ingestion_parsing.csv_parser import parse_csv
 from ingestion_parsing.ddl_parser import parse_ddl  
