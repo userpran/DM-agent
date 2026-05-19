@@ -19,16 +19,22 @@ def health():
 
 async def upload_file(file: UploadFile = File(...)):
     filename = file.filename.lower() # Normalize filename for safer extension checks
-    content = await file.read() # Read uploaded file content
 
-#check if filename is empty or just whitespace
+    #check if filename is valid (not empty or just whitespace)
     if not filename or filename.strip() == "":
         return {"error": "No filename detected"}
 
+    # reject files that exceed the maximum size limit before reading them into memory
+    if file.size and file.size > MAX_FILE_SIZE:
+        return {"error": "File too large. Maximum allowed size is 10MB."}
+    
+    content = await file.read() # Read uploaded file content into memory
+
+    # Double-check after read in case Content-Length header was missing (causes file.size to give None)
     if len(content) > MAX_FILE_SIZE:
         return {"error": "File too large. Maximum allowed size is 10MB."}
     
-# Route to the appropriate parser based on file extension
+    # Route to the appropriate parser based on file extension
     if filename.endswith(".csv"):
         return parse_csv(content)
     elif filename.endswith(".sql") or filename.endswith(".ddl"):
