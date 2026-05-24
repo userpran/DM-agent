@@ -63,8 +63,7 @@ def csv_to_profiler_input(parsed: dict, table_name: str = "uploaded_csv") -> dic
     csv_parser "columns" entries use key "raw_dtype" (not "raw_type").
     ProfilerColumnMeta's model_validator resolves this automatically.
 
-    csv_parser "sample_rows" is limited to 5 rows (max set in csv_parser.py).
-    For large-file profiling, pass all rows directly to profile_table().
+    csv_parser provides full ``rows`` for profiling and ``sample_rows`` (5) for API preview.
     """
     if "columns" not in parsed:
         raise ValueError(
@@ -72,8 +71,9 @@ def csv_to_profiler_input(parsed: dict, table_name: str = "uploaded_csv") -> dic
             "Is this valid csv_parser output?"
         )
 
-    columns  = parsed.get("columns",     [])
-    rows     = parsed.get("sample_rows", [])
+    columns  = parsed.get("columns", [])
+    # Prefer full rows for profiling; fall back to sample_rows for legacy parse output
+    rows     = parsed.get("rows") or parsed.get("sample_rows", [])
 
     logger.debug(
         f"csv_to_profiler_input: table='{table_name}', "

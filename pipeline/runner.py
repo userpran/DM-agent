@@ -150,6 +150,9 @@ def run_csv_pipeline(content: bytes, filename: str = "file.csv") -> dict:
     total_ms = (time.time() - pipeline_start) * 1000
     logger.info(f"━━━ CSV PIPELINE DONE  ━━━  total={total_ms:.1f}ms  stages={stages_done}")
 
+    # Full row data is for profiling only — keep API parse_output compact
+    parse_output = {k: v for k, v in parsed.items() if k != "rows"}
+
     return {
         "pipeline":          "csv",
         "filename":          filename,
@@ -157,7 +160,7 @@ def run_csv_pipeline(content: bytes, filename: str = "file.csv") -> dict:
         "stages_completed":  stages_done,
         "error":             None,
         "saved_profile_path": saved_profile_path,
-        "parse_output":      parsed,
+        "parse_output":      parse_output,
         "profiling_output":  result.model_dump(),
     }
 
@@ -269,12 +272,20 @@ def run_ddl_pipeline(content: str, filename: str = "file.sql") -> dict:
     total_ms = (time.time() - pipeline_start) * 1000
     logger.info(f"━━━ DDL PIPELINE DONE  ━━━  status={status}  total={total_ms:.1f}ms")
 
+    top_error = None
+    if status == "error":
+        first = next((o for o in profiling_outputs if o.get("error")), None)
+        top_error = {
+            "stage": "profile",
+            "message": first["error"] if first else "All tables failed to profile",
+        }
+
     return {
         "pipeline":         "ddl",
         "filename":         filename,
         "status":           status,
         "stages_completed": stages_done,
-        "error":            None,
+        "error":            top_error,
         "parse_output":     parsed,
         "profiling_output": profiling_outputs,
     }

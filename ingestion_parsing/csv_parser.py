@@ -1,6 +1,12 @@
 import pandas as pd
 import io
 
+
+def _rows_for_profiling(df: pd.DataFrame) -> list:
+    """All data rows as JSON-safe dicts (NaN → None) for the profiling layer."""
+    return df.where(pd.notna(df), None).to_dict(orient="records")
+
+
 def parse_csv(content: bytes) -> dict:
     """
     Ingests raw CSV bytes and safely extracts its basic layout.
@@ -42,8 +48,8 @@ def parse_csv(content: bytes) -> dict:
         "row_count": len(df),
         "column_count": len(df.columns),
         "columns": columns_structure,
-        # 5-row sample preview with NaN values replaced by "NULL" strings for safe JSON serialization
-        # DataFrame records are formatted as an array of JSON dictionaries (each dict represents a row of data with column names as keys)
-        "sample_rows": df.head(5).fillna("NULL").to_dict(orient="records")
+        # 5-row preview for API responses (parse_output)
+        "sample_rows": df.head(5).fillna("NULL").to_dict(orient="records"),
+        # Full dataset for profiling (omitted from API parse_output by pipeline runner)
+        "rows": _rows_for_profiling(df),
     }
-
