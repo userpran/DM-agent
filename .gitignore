@@ -7,5 +7,19 @@ __pycache__/
 # IDE configurations
 .vscode/
 
-#local test scripts/data 
+# Local test scripts/data
 test/
+
+# Generated profiling output — do not commit
+output/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# Logs
+*.log
